@@ -68,14 +68,14 @@ int RequestObject::sendRequest(const QString& targetName, const QString& command
 	return messageId;
 }
 
-inline void RequestObject::onReceive(const QVariantHash& message)
+void RequestObject::onReceive(const QVariantHash& message)
 {
     int messageId = message.value("messageId").toInt();
     QVariantHash data = message.value("message").toHash();
     emit receiveReply(messageId, data);
 }
 
-inline int RequestObject::generateMessageId()
+int RequestObject::generateMessageId()
 {
     return m_messageId++;
 }
@@ -94,7 +94,7 @@ void ResponseObject::reply(const QString& requestName, int messageId, const QVar
     send(requestName, data);
 }
 
-inline void ResponseObject::onReceive(const QVariantHash& message)
+void ResponseObject::onReceive(const QVariantHash& message)
 {
     const QString requestName = message.value("request").toString();
     const QString command = message.value("command").toString();
