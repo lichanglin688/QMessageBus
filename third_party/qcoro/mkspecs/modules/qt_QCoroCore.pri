@@ -1,0 +1,12 @@
+QT.QCoroCore.VERSION = 0.11.0
+QT.QCoroCore.MAJOR_VERSION = 0
+QT.QCoroCore.MINOR_VERSION = 11
+QT.QCoroCore.PATCH_VERSION = 0
+QT.QCoroCore.name = QCoro5Core
+QT.QCoroCore.module = QCoro5Core
+QT.QCoroCore.defines = 
+QT.QCoroCore.includes =  $$PWD/../../include/qcoro5/qcoro $$PWD/../../include/qcoro5/QCoro
+QT.QCoroCore.private_includes =
+QT.QCoroCore.libs = $$PWD/../../lib
+QT.QCoroCore.depends =  core  QCoroCoro
+QT.QCoroCore.module_config = staticlib
