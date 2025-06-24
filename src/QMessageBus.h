@@ -14,7 +14,7 @@ class QMessageObject : public QObject
 		friend class QMessageBus;
 
 public:
-	explicit QMessageObject(const QString& name = {}, QMessageBus* QMessageBus = nullptr, QObject* parent = nullptr);
+	explicit QMessageObject(QObject* parent = nullptr, const QString& name = {}, QMessageBus* QMessageBus = nullptr);
 
 	~QMessageObject();
 
@@ -46,16 +46,25 @@ private:
 	QHash<QString, QMessageObject*> m_eventObjects;
 	QReadWriteLock m_rwlock;
 };
-
+#include <type_traits>
 class RequestObject : public QMessageObject
 {
 	Q_OBJECT
 
 public:
-	explicit RequestObject(const QString& name = {}, QMessageBus* QMessageBus = nullptr, QObject* parent = nullptr);
-    int sendRequest(const QString& targetName, const QString& command, const QVariantHash& message);
+	explicit RequestObject(QObject* parent = nullptr, const QString& name = {}, QMessageBus* QMessageBus = nullptr);
+	template<typename T>
+	int sendRequest(const QString& targetName, const QString& command, const T& message)
+	{
+		return sendRequest(targetName, command, QVariant::fromValue(message));
+	}
+	int sendRequest(const QString& targetName, const QString& command, const char* message)
+	{
+		return sendRequest(targetName, command, QVariant::fromValue(QString(message)));
+	}
+	int sendRequest(const QString& targetName, const QString& command, const QVariant& message);
 Q_SIGNALS:
-	void receiveReply(int messageId, const QVariantHash& message);
+	void receiveReply(int messageId, const QVariant& message);
 
 private Q_SLOTS:
 	void onReceive(const QVariantHash& message);
@@ -63,19 +72,27 @@ private:
 	int generateMessageId();
 
 private:
-    int m_messageId{};
+	int m_messageId{};
 };
 
+class RequestMessage
+{
+public:
+	QString requestName;
+	QString command;
+	int messageId{};
+	QVariant message;
+};
 class ResponseObject : public QMessageObject
 {
 	Q_OBJECT
 
 public:
-	explicit ResponseObject(const QString& name = {}, QMessageBus* QMessageBus = nullptr, QObject* parent = nullptr);
+	explicit ResponseObject(QObject* parent = nullptr, const QString& name = {}, QMessageBus* QMessageBus = nullptr);
 
-	void reply(const QString& requestName, int messageId, const QVariantHash& message);
+	void reply(const QString& requestName, int messageId, const QVariant& message);
 Q_SIGNALS:
-	void receiveRequest(const QString& requestName, const QString& command, int messageId, const QVariantHash& message);
+	void receiveRequest(const RequestMessage& requestMessage);
 
 private Q_SLOTS:
 	void onReceive(const QVariantHash& message);

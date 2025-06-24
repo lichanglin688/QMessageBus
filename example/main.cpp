@@ -12,7 +12,7 @@ class LogService : public QObject
         public:
 			LogService(QObject* parent = nullptr) : QObject(parent)
             {
-				responseObject = std::make_shared<ResponseObject>("logService", QMessageBus::instance());
+				responseObject = std::make_shared<ResponseObject>(this, "logService", QMessageBus::instance());
 				connect(responseObject.get(), &ResponseObject::receiveRequest, this, &LogService::onReceiveRequest);
             }
             ~LogService()
@@ -20,12 +20,12 @@ class LogService : public QObject
                 qDebug() << "LogService destroyed";
 			}
 private slots:
-    void onReceiveRequest(const QString& requestName, const QString& command, int messageId, const QVariantHash& message)
+    void onReceiveRequest(const RequestMessage& requestMessage)
             {
-                qDebug() << "LogService received message:" << requestName << command << messageId << message;
-                if (command == "debug")
+                qDebug() << "LogService received message:" << requestMessage.requestName << requestMessage.command << requestMessage.messageId << requestMessage.message;
+                if (requestMessage.command == "debug")
                 {
-                    responseObject->reply(requestName, messageId, QVariantHash{ {"result", "log success"} });
+                    responseObject->reply(requestMessage.requestName, requestMessage.messageId, QString("log success"));
                 }
             }
 
@@ -34,9 +34,9 @@ private:
 };
 
 //c++20 协程风格的同步请求函数
-QCoro::Task<void> syncRequest(RequestObject* request, const QString& serviceName, const QString& command, const QVariantHash& message)
+QCoro::Task<void> syncRequest(RequestObject* request, const QString& serviceName, const QString& command, const QVariant& message)
 {
-	int messageId = request->sendRequest(serviceName, command, message);
+    int messageId = request->sendRequest(serviceName, command, message);
     auto listener = qCoroSignalListener(request, &RequestObject::receiveReply, std::chrono::seconds(1));
     QCORO_FOREACH(auto messages, listener)
     {
@@ -63,12 +63,12 @@ int main(int argc, char* argv[])
     RequestObject request;
 
 	//不需要响应对象的请求
-    request.sendRequest("logService", "info", QVariantHash{ {"message", "Hello, World!"} });
+    request.sendRequest("logService", "info", QString("Hello, World!"));
 
 	//需要响应对象的请求
-    syncRequest(&request, "logService", "debug", QVariantHash{ {"message", "Hello, World!"} });
+    syncRequest(&request, "logService", "debug", QString("Hello, World!"));
 
-    syncRequest(&request, "logService", "info", QVariantHash{ {"message", "Hello, World!"} });
+    syncRequest(&request, "logService", "info", QString("Hello, World!"));
 
     QTimer::singleShot(3000, &app, [&]() {
 		logService->deleteLater();
