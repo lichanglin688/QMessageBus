@@ -12,8 +12,8 @@ class LogService : public QObject
         public:
 			LogService(QObject* parent = nullptr) : QObject(parent)
             {
-				responseObject = std::make_shared<ResponseObject>(this, "logService", QMessageBus::instance());
-				connect(responseObject.get(), &ResponseObject::receiveRequest, this, &LogService::onReceiveRequest);
+                responseObject = new ResponseObject(this, "logService", QMessageBus::instance());
+                connect(responseObject, &ResponseObject::receiveRequest, this, &LogService::onReceiveRequest);
             }
             ~LogService()
             {
@@ -30,7 +30,8 @@ private slots:
             }
 
 private:
-	std::shared_ptr<ResponseObject> responseObject;
+    //std::shared_ptr<ResponseObject> responseObject;
+    ResponseObject* responseObject;
 };
 
 //c++20 协程风格的同步请求函数
