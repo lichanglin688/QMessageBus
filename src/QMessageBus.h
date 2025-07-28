@@ -46,7 +46,32 @@ private:
 	QHash<QString, QMessageObject*> m_eventObjects;
 	QReadWriteLock m_rwlock;
 };
-#include <type_traits>
+
+class RespnseMessage
+{
+public:
+	RespnseMessage(int messageId, const QVariant& message)
+		: messageId(messageId), message(message)
+	{
+	}
+	template<typename T>
+	T getResponse() const
+	{
+		return message.value<T>();
+	}
+	QVariant getResponse() const
+	{
+		return message;
+	}
+	int getMessageId() const
+	{
+		return messageId;
+	}
+private:
+	int messageId{};
+	QVariant message;
+};
+
 class RequestObject : public QMessageObject
 {
 	Q_OBJECT
@@ -64,7 +89,7 @@ public:
 	}
 	int sendRequest(const QString& targetName, const QString& command, const QVariant& message);
 Q_SIGNALS:
-	void receiveReply(int messageId, const QVariant& message);
+	void receiveReply(const RespnseMessage& message);
 
 private Q_SLOTS:
 	void onReceive(const QVariantHash& message);
@@ -78,6 +103,32 @@ private:
 class RequestMessage
 {
 public:
+	RequestMessage(const QString& requestName = {}, const QString& command = {}, int messageId = 0, const QVariant& message = {})
+		: requestName(requestName), command(command), messageId(messageId), message(message)
+	{
+	}
+	template<typename T>
+	T getMessage() const
+	{
+		return message.value<T>();
+	}
+	QVariant getMessage() const
+	{
+		return message;
+	}
+	int getMessageId() const
+	{
+		return messageId;
+	}
+	QString getRequestName() const
+	{
+		return requestName;
+	}
+	QString getCommand() const
+	{
+		return command;
+	}
+private:
 	QString requestName;
 	QString command;
 	int messageId{};

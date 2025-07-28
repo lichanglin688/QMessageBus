@@ -72,7 +72,8 @@ void RequestObject::onReceive(const QVariantHash& message)
 {
 	int messageId = message.value("messageId").toInt();
 	QVariant data = message.value("message");
-	emit receiveReply(messageId, data);
+	RespnseMessage responseMessage{ messageId, data };
+	emit receiveReply(responseMessage);
 }
 
 int RequestObject::generateMessageId()

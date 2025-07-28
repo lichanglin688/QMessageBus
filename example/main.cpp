@@ -22,10 +22,11 @@ public:
 private slots:
 	void onReceiveRequest(const RequestMessage& requestMessage)
 	{
-		qDebug() << "LogService received message:" << requestMessage.requestName << requestMessage.command << requestMessage.messageId << requestMessage.message;
-		if (requestMessage.command == "debug")
+		qDebug() << "LogService received message:" << requestMessage.getRequestName() << requestMessage.getCommand() << requestMessage.getMessageId() << requestMessage.getMessage();
+
+		if (requestMessage.getCommand() == "debug")
 		{
-			responseObject->reply(requestMessage.requestName, requestMessage.messageId, QString("log success"));
+			responseObject->reply(requestMessage.getRequestName(), requestMessage.getMessageId(), QString("log success"));
 		}
 	}
 
@@ -36,11 +37,14 @@ private:
 //c++20 协程风格的同步请求函数
 QCoro::Task<void> syncRequest(RequestObject* request, const QString& serviceName, const QString& command, const QVariant& message)
 {
-	int messageId = request->sendRequest(serviceName, command, message);
+	//int messageId = request->sendRequest(serviceName, command, message);
+	int messageId = request->sendRequest(serviceName, command, "message");
 	auto listener = qCoroSignalListener(request, &RequestObject::receiveReply, std::chrono::seconds(1));
-	QCORO_FOREACH(auto messages, listener)
+	QCORO_FOREACH(const auto& messages, listener)
 	{
-		auto& [responseMessageId, responseMessage] = messages;
+		//auto& [responseMessageId, responseMessage] = messages;
+		int responseMessageId = messages.getMessageId();
+		QVariant responseMessage = messages.getResponse();
 		if (responseMessageId == messageId)
 		{
 			qDebug() << "syncRequest Received response for messageId" << responseMessageId << ":" << responseMessage;
